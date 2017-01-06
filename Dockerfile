@@ -2,13 +2,12 @@ FROM ubuntu:16.04
 
 ENV SWIFT_DOWNLOAD https://swift.org/builds/swift-3.0.2-release/ubuntu1604/swift-3.0.2-RELEASE/swift-3.0.2-RELEASE-ubuntu16.04.tar.gz
 
-RUN apt-get update && apt-get dist-upgrade -y && apt-get install -y \
-    build-essential \
+RUN apt-get -qq update && apt-get -yqq install \
     clang-3.8 \
     git \
     libcurl4-openssl-dev \
     libicu-dev \
-    libpython2.7 \
+    openssl \
     wget \
 
     # Set clang 3.8 as default
@@ -18,11 +17,13 @@ RUN apt-get update && apt-get dist-upgrade -y && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
 
-    && wget -O /swift.tar.gz ${SWIFT_DOWNLOAD} \
-
-    && tar xzvf /swift.tar.gz \
-
+    # download and install swift
+    && wget --quiet --output-document=/swift.tar.gz ${SWIFT_DOWNLOAD} \
+    && tar xzf /swift.tar.gz --strip 1 \
     && rm /swift.tar.gz \
+
+    # Fix permission in swift (so non root users can use this)
+    && chmod -R o+r /usr/lib/swift/CoreFoundation \
 
     # See following URL for details: http://tldp.org/LDP/lfs/LFS-BOOK-6.1.1-HTML/chapter06/pwdgroup.html
     && touch /var/run/utmp /var/log/{btmp,lastlog,wtmp} \
@@ -35,8 +36,8 @@ RUN apt-get update && apt-get dist-upgrade -y && apt-get install -y \
     && chmod 600 /etc/security/opasswd \
 
     # See following URL for details: http://www.cyberciti.biz/faq/linux-kernel-etcsysctl-conf-security-hardening/
-    && grep -q '^net.ipv4.tcp_syncookies' /etc/sysctl.conf && sed -i 's/^net.ipv4.tcp_syncookies.*/net.ipv4.tcp_syncookies = 1/' /etc/sysctl.conf || echo 'net.ipv4.tcp_syncookies = 1' >> /etc/sysctl.conf \
-    && grep -q '^net.ipv4.ip_forward' /etc/sysctl.conf && sed -i 's/^net.ipv4.ip_forward.*/net.ipv4.ip_forward = 0/' /etc/sysctl.conf || echo 'net.ipv4.ip_forward = 0' >> /etc/sysctl.conf \
-    && grep -q '^net.ipv4.icmp_echo_ignore_broadcasts' /etc/sysctl.conf && sed -i 's/^net.ipv4.icmp_echo_ignore_broadcasts.*/net.ipv4.icmp_echo_ignore_broadcasts = 1/' /etc/sysctl.conf || echo 'net.ipv4.icmp_echo_ignore_broadcasts = 1' >> /etc/sysctl.conf \
+    && echo 'net.ipv4.tcp_syncookies=1' >> /etc/sysctl.conf \
+    && echo 'net.ipv4.ip_forward=0' >> /etc/sysctl.conf \
+    && echo 'net.ipv4.icmp_echo_ignore_broadcasts=1' >> /etc/sysctl.conf \
 
     && swift --version
