@@ -7,6 +7,7 @@ RUN apt-get -qq update && apt-get -yqq install \
     git \
     libcurl4-openssl-dev \
     libicu-dev \
+    libpython2.7 \
     openssl \
     wget \
 
