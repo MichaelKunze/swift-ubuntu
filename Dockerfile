@@ -11,6 +11,7 @@ RUN apt-get -qq update && apt-get -yqq install \
     libssl-dev \
     libxml2 \
     openssl \
+    uuid-dev \
     wget \
 
     # Set clang 3.8 as default
